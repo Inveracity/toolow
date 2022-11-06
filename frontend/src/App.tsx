@@ -28,6 +28,8 @@ function App() {
     setFile("")
     setMaxVolume("-")
     setMeanVolume("-")
+    setIsLoading(false)
+    setNormalized("")
   }
 
   function normalize(filepath: string) {
