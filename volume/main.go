@@ -3,32 +3,55 @@ package volume
 import (
 	"fmt"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
 type Volume struct {
-	Max    string
-	Mean   string
-	output string
+	Max     string
+	Mean    string
+	output  string
+	Outfile string
 }
 
 func NewVolume() Volume {
 	return Volume{}
 }
 
-func (v *Volume) Volumedetect(filename string) (string, error) {
+// Run the volume detection filter and return the mean and max volume in dB
+func (v *Volume) Volumedetect(filename string) (Volume, error) {
 	cmd := exec.Command("ffmpeg", "-i", filename, "-af", "volumedetect", "-vn", "-sn", "-dn", "-f", "null", "NUL")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Sprintf("%+v: %s", err.Error(), string(v.output)), err
+		return Volume{}, err
 	}
 	v.output = string(output)
 	v.getMean()
 	v.getMax()
 
-	return "", nil
+	return *v, nil
 }
 
+// Normalize audio track to -14 LUFS, Loudness Range 11, True Peak -1dB
+func (v *Volume) Lufs(filename string) (Volume, error) {
+	ext := filepath.Ext(filename)
+	outfile := fmt.Sprintf("%s_normalized%s", strings.TrimSuffix(filename, ext), ext)
+	cmd := exec.Command("ffmpeg", "-i", filename, "-af", "loudnorm=I=-14:LRA=11:TP=-1", outfile)
+	_, err := cmd.CombinedOutput()
+	if err != nil {
+		return Volume{}, err
+	}
+
+	// Analyze after normalization
+	v.Volumedetect(outfile)
+	v.getMean()
+	v.getMax()
+	v.Outfile = outfile
+
+	return *v, nil
+}
+
+// Loop over ffmpeg output to grab specific lines and split on a delimiter
 func getLine(find string, text string, delimiter string) string {
 	out := strings.Split(strings.Replace(text, "\r\n", "\n", -1), "\n")
 	for _, line := range out {

@@ -1,6 +1,6 @@
 module toolow
 
-go 1.18
+go 1.19
 
 require github.com/wailsapp/wails/v2 v2.1.0
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 
@@ -12,6 +11,7 @@ import (
 // App struct
 type App struct {
 	ctx context.Context
+	v   volume.Volume
 }
 
 // NewApp creates a new App application struct
@@ -23,8 +23,10 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	a.v = volume.NewVolume()
 }
 
+// Get path to video file
 func (a *App) Videofile() string {
 	video, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
 		Title: "Select File",
@@ -42,12 +44,20 @@ func (a *App) Videofile() string {
 	return video
 }
 
-func (a *App) Volume(video string) (volumes []string) {
-	v := volume.NewVolume()
-	errstring, err := v.Volumedetect(video)
+// Detect volume levels on video
+func (a *App) Volume(video string) (volume.Volume, error) {
+	v, err := a.v.Volumedetect(video)
 	if err != nil {
-		fmt.Println(errstring)
+		return volume.Volume{}, err
 	}
+	return v, nil
+}
 
-	return []string{v.Max, v.Mean}
+// Normalize audio on the video
+func (a *App) Normalize(video string) (volume.Volume, error) {
+	v, err := a.v.Lufs(video)
+	if err != nil {
+		return volume.Volume{}, err
+	}
+	return v, nil
 }
