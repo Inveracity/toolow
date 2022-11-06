@@ -2,7 +2,14 @@
 
 > ⚠️ Work In Progress
 
-![](docs/toolow.png)
+![](https://i.imgur.com/gIhwTro.gif)
+
+The gif above shows a video file where the peak volume is -7.9dB, and after normalization it's raised to -1.1dB peak volume.
+
+Usage:
+  1. Press the _Select video file_ button.
+  2. Press the _Analyze_ button to get the current values.
+  3. Press _Normalize Audio_ to normalize the audio. If the file already exists nothing will happen.
 
 ## About
 
@@ -12,9 +19,9 @@ To run this application, the `ffmpeg` binary needs to be available in _PATH_
 
 Features:
   - Get the max and mean volume levels in dB
+  - Normalize/raise volume of the audio on a video file
 
 Goals:
-  - Normalize/raise volume of the audio on a video file
   - Replace the audio track of a video with another audio file
   - Configurable path to ffmpeg binary
 
