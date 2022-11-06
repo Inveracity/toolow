@@ -6,10 +6,19 @@
 
 The gif above shows a video file where the peak volume is -7.9dB, and after normalization it's raised to -1.1dB peak volume.
 
-Usage:
-  1. Press the _Select video file_ button.
-  2. Press the _Analyze_ button to get the current values.
-  3. Press _Normalize Audio_ to normalize the audio. If the file already exists nothing will happen.
+## Quickstart (Windows)
+
+Install ffmpeg 
+
+```powershell
+choco install ffmpg
+```
+
+Run `toolow.exe`
+
+1. Press the Select video file button.
+2. Press the Analyze button to get the current values.
+3. Press Normalize Audio to normalize the audio. If the file already exists nothing will happen.
 
 ## About
 
