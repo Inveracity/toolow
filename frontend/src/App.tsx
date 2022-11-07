@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Normalize, Videofile, Volume } from "../wailsjs/go/main/App";
 import { Box, Button, Stack, Text, Image, Progress, Divider } from "@chakra-ui/react"
 import banner from "./assets/banner.png"
-
+import { EventsOff, EventsOn } from "../wailsjs/runtime"
 
 function App() {
   const [maxVolume, setMaxVolume] = useState('');
@@ -10,6 +10,8 @@ function App() {
   const [file, setFile] = useState('');
   const [normalizedFile, setNormalized] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [stream, setStream] = useState("");
+  const [stdout, setStdout] = useState([""]);
 
   function getVideoFile() {
     Videofile().then((v) => {
@@ -18,9 +20,12 @@ function App() {
   }
 
   function getVolume(filepath: string) {
+    EventsOn("ffmpeg", ffmpeg)
     Volume(filepath).then((v) => {
       setMaxVolume(v.Max)
       setMeanVolume(v.Mean)
+    }).finally(() => {
+      EventsOff("ffmpeg")
     })
   }
 
@@ -30,18 +35,31 @@ function App() {
     setMeanVolume("-")
     setIsLoading(false)
     setNormalized("")
+    setStream("")
+    setStdout([""])
+  }
+
+  function ffmpeg(data: string | Array<string>) {
+    setStdout("")
+    if (Array.isArray(data)) {
+      setStdout(data)
+    } else {
+      console.log(data)
+      setStream(data)
+    }
   }
 
   function normalize(filepath: string) {
     setIsLoading(true)
+    EventsOn("ffmpeg", ffmpeg)
     Normalize(filepath)
       .then((result) => {
-        console.log(result)
         setNormalized(result.Outfile)
         setMaxVolume(result.Max)
         setMeanVolume(result.Mean)
       })
       .finally(() => {
+        EventsOff("ffmpeg")
         setIsLoading(false)
       })
   }
@@ -60,7 +78,8 @@ function App() {
           <Text textColor="brand.white">Out: {normalizedFile}</Text>
           {
             file
-              ? <>
+              ?
+              <>
                 <Stack direction={"row"} justify="space-between">
                   <Button width="140px" onClick={(_) => getVolume(file)}>Analyze</Button>
                   <Button width="140px" onClick={(_) => normalize(file)}>Normalize Audio</Button>
@@ -73,10 +92,25 @@ function App() {
                   <Text textColor={'brand.white'}>mean volume:</Text>
                   <Text textColor={'brand.400'}>{meanVolume}</Text>
                 </Stack>
-
               </>
-              : null
+              :
+              null
           }
+          <Box bg='black' w='100%' p={4}>
+
+            <Stack>
+              {
+                stdout ? stdout.map(
+                  (element: string, index: number) => {
+                    return (
+                      <Text key={index} as="kbd" textColor="brand.white">{element}</Text>
+                    )
+                  }
+                )
+                  : <Text as="kbd" textColor="brand.white">{stream}</Text>
+              }
+            </Stack>
+          </Box>
         </Stack>
       </Box>
     </Box >
