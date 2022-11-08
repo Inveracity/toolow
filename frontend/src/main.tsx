@@ -24,6 +24,7 @@ const theme = extendTheme(
         body: {
           color: 'default',
           bg: 'brand.bg',
+          overflowX: 'hidden',
         },
       })
     }
