@@ -82,13 +82,23 @@ func (v *Volume) ffmpeg(args ...string) []string {
 	stderr, _ := cmd.StderrPipe()
 	cmd.Start()
 
+	streamScanner := bufio.NewScanner(stderr)
+	streamScanner.Split(bufio.ScanWords)
+
+	go func() {
+		for streamScanner.Scan() {
+			m := streamScanner.Text()
+			runtime.EventsEmit(v.ctx, "stream", m)
+		}
+	}()
+
 	scanner := bufio.NewScanner(stderr)
 	scanner.Split(bufio.ScanLines)
 
 	out := []string{""}
 	for scanner.Scan() {
 		m := scanner.Text()
-		runtime.EventsEmit(v.ctx, "ffmpeg", m)
+
 		out = append(out, m)
 	}
 

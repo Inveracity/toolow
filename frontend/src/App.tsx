@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Normalize, Videofile, Volume } from "../wailsjs/go/main/App";
-import { Box, Button, Stack, Text, Image, Progress, Divider } from "@chakra-ui/react"
+import { Box, Button, Stack, Text, Image, Progress, Divider, Collapse } from "@chakra-ui/react"
 import banner from "./assets/banner.png"
 import { EventsOff, EventsOn } from "../wailsjs/runtime"
 
@@ -12,8 +12,10 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [stream, setStream] = useState("");
   const [stdout, setStdout] = useState([""]);
+  const [openTerminal, setOpenTerminal] = useState(false);
 
   function getVideoFile() {
+    clear()
     Videofile().then((v) => {
       setFile(v)
     })
@@ -39,19 +41,20 @@ function App() {
     setStdout([""])
   }
 
-  function ffmpeg(data: string | Array<string>) {
-    setStdout("")
-    if (Array.isArray(data)) {
-      setStdout(data)
-    } else {
-      console.log(data)
-      setStream(data)
-    }
+  function ffmpeg(data: Array<string>) {
+    setStdout(data)
+    // If there is a full set of data, drop the streamed data
+    setStream("")
+  }
+
+  function handleStream(data: string) {
+    setStream(data)
   }
 
   function normalize(filepath: string) {
     setIsLoading(true)
     EventsOn("ffmpeg", ffmpeg)
+    EventsOn("stream", handleStream)
     Normalize(filepath)
       .then((result) => {
         setNormalized(result.Outfile)
@@ -60,19 +63,24 @@ function App() {
       })
       .finally(() => {
         EventsOff("ffmpeg")
+        EventsOff("stream")
         setIsLoading(false)
       })
   }
 
+  function showTerminal() {
+    setOpenTerminal(!openTerminal)
+  }
+
   return (
-    <Box height={"100vh"} bg="brand.bg">
+    <Box height={"100vh"}>
       <Banner />
       {isLoading ? <Progress height="5px" mt="5px" mb="5px" isIndeterminate color="brand.200" /> : <Divider height="5px" mt="5px" mb="5px" />}
       <Box display="flex" justifyContent="center" width={"100vw"}>
         <Stack width={"70vw"}>
           <Stack direction={"row"} justify="space-between">
-            <Button bgColor={"brand.300"} width="140px" onClick={getVideoFile}>Select video file</Button>
-            <Button bgColor={"brand.300"} width="140px" onClick={clear}>Clear</Button>
+            <Button disabled={isLoading} bgColor={"brand.300"} width="140px" onClick={getVideoFile}>Select video file</Button>
+            <Button disabled={isLoading} bgColor={"brand.300"} width="140px" onClick={clear}>Clear</Button>
           </Stack>
           <Text textColor="brand.white">In:  {file}</Text>
           <Text textColor="brand.white">Out: {normalizedFile}</Text>
@@ -81,8 +89,8 @@ function App() {
               ?
               <>
                 <Stack direction={"row"} justify="space-between">
-                  <Button width="140px" onClick={(_) => getVolume(file)}>Analyze</Button>
-                  <Button width="140px" onClick={(_) => normalize(file)}>Normalize Audio</Button>
+                  <Button disabled={isLoading} width="140px" onClick={(_) => getVolume(file)}>Analyze</Button>
+                  <Button disabled={isLoading} width="140px" onClick={(_) => normalize(file)}>Normalize Audio</Button>
                 </Stack>
                 <Stack direction={"row"}>
                   <Text textColor={'brand.white'}>max volume:</Text>
@@ -96,20 +104,30 @@ function App() {
               :
               null
           }
-          <Box bg='black' w='100%' p={4}>
+          <Box>
 
-            <Stack>
-              {
-                stdout ? stdout.map(
-                  (element: string, index: number) => {
-                    return (
-                      <Text key={index} as="kbd" textColor="brand.white">{element}</Text>
-                    )
-                  }
-                )
-                  : <Text as="kbd" textColor="brand.white">{stream}</Text>
-              }
-            </Stack>
+          </Box>
+          <Box bg='brand.terminal' w='100%' p={4} rounded="md" >
+            <Box display="flex">
+              {stream ? <Text as="kbd" textColor="brand.white">{stream}</Text> : null}
+              {stdout && !isLoading ? <Button width="100px" onClick={showTerminal}>{openTerminal ? "Hide" : "Show"}</Button> : null}
+            </Box>
+            <Collapse in={openTerminal} >
+              <Stack>
+                {
+                  stdout && !stream ? stdout.map(
+                    (element: string, index: number) => {
+                      return (
+                        <Text fontSize="13px" key={index} as="kbd" textColor="brand.white">{element}</Text>
+                      )
+                    }
+                  )
+                    : null
+                }
+              </Stack>
+            </Collapse>
+
+
           </Box>
         </Stack>
       </Box>
