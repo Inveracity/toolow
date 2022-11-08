@@ -83,26 +83,17 @@ function App() {
             <Button disabled={isLoading || !file} width="140px" onClick={(_) => normalize(file)}>Normalize Audio</Button>
             <Button disabled={isLoading} bgColor={"brand.300"} width="140px" onClick={clear}>Clear</Button>
           </Stack>
-          <Text textColor="brand.white">In:  {file}</Text>
-          <Text textColor="brand.white">Out: {normalizedFile}</Text>
           {
             file
               ? <>
-                <Stack direction={"row"} justify="space-between">
-                </Stack>
-                <Stack direction={"row"}>
-                  <Text textColor={'brand.white'}>max volume:</Text>
-                  <Text textColor={'brand.400'}>{maxVolume}</Text>
-                </Stack>
-                <Stack direction={"row"}>
-                  <Text textColor={'brand.white'}>mean volume:</Text>
-                  <Text textColor={'brand.400'}>{meanVolume}</Text>
-                </Stack>
+                <TextPair left="In:" right={file} />
+                <TextPair left="Out:" right={normalizedFile} />
+                <TextPair left="max volume:" right={maxVolume} />
+                <TextPair left="mean volume:" right={meanVolume} />
                 <Terminal loading={isLoading} stdout={stdout} stream={stream} />
               </>
               : null
           }
-
         </Stack>
       </Box>
     </Box >
@@ -134,7 +125,6 @@ interface ITerminal {
 }
 
 const Terminal: React.FC<ITerminal> = ({ loading, stdout, stream }) => {
-
   const [openTerminal, setOpenTerminal] = useState(false);
 
   function showTerminal() {
@@ -144,8 +134,16 @@ const Terminal: React.FC<ITerminal> = ({ loading, stdout, stream }) => {
   return (
     <Box bg='brand.terminal' w='100%' p={4} rounded="md" >
       <Box display="flex">
-        {stream ? <Text as="kbd" textColor="brand.white">{stream}</Text> : null}
-        {stdout && !loading ? <Button width="100px" onClick={showTerminal}>{openTerminal ? "Hide" : "Show"}</Button> : null}
+        {
+          stream
+            ? <Text as="kbd" textColor="brand.white">{stream}</Text>
+            : null
+        }
+        {
+          stdout && !loading
+            ? <Button width="100px" onClick={showTerminal}>{openTerminal ? "Hide" : "Show"}</Button>
+            : null
+        }
       </Box>
       <Collapse in={openTerminal} >
         <Stack>
@@ -162,5 +160,19 @@ const Terminal: React.FC<ITerminal> = ({ loading, stdout, stream }) => {
         </Stack>
       </Collapse>
     </Box>
+  )
+}
+
+interface ITextPair {
+  left: string
+  right: string
+}
+
+const TextPair: React.FC<ITextPair> = ({ left, right }) => {
+  return (
+    <Stack direction={"row"} justify="space-between">
+      <Text textColor={'brand.white'}>{left}</Text>
+      <Text textColor={'brand.300'}>{right}</Text>
+    </Stack>
   )
 }
