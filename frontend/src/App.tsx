@@ -12,7 +12,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [stream, setStream] = useState("");
   const [stdout, setStdout] = useState([""]);
-  const [openTerminal, setOpenTerminal] = useState(false);
+
 
   function getVideoFile() {
     clear()
@@ -68,29 +68,27 @@ function App() {
       })
   }
 
-  function showTerminal() {
-    setOpenTerminal(!openTerminal)
-  }
+
 
   return (
     <Box height={"100vh"}>
       <Banner />
-      {isLoading ? <Progress height="5px" mt="5px" mb="5px" isIndeterminate color="brand.200" /> : <Divider height="5px" mt="5px" mb="5px" />}
+      <LinearProgress loading={isLoading} />
+
       <Box display="flex" justifyContent="center" width={"100vw"}>
         <Stack width={"70vw"}>
           <Stack direction={"row"} justify="space-between">
             <Button disabled={isLoading} bgColor={"brand.300"} width="140px" onClick={getVideoFile}>Select video file</Button>
+            <Button disabled={isLoading || !file} width="140px" onClick={(_) => getVolume(file)}>Analyze</Button>
+            <Button disabled={isLoading || !file} width="140px" onClick={(_) => normalize(file)}>Normalize Audio</Button>
             <Button disabled={isLoading} bgColor={"brand.300"} width="140px" onClick={clear}>Clear</Button>
           </Stack>
           <Text textColor="brand.white">In:  {file}</Text>
           <Text textColor="brand.white">Out: {normalizedFile}</Text>
           {
             file
-              ?
-              <>
+              ? <>
                 <Stack direction={"row"} justify="space-between">
-                  <Button disabled={isLoading} width="140px" onClick={(_) => getVolume(file)}>Analyze</Button>
-                  <Button disabled={isLoading} width="140px" onClick={(_) => normalize(file)}>Normalize Audio</Button>
                 </Stack>
                 <Stack direction={"row"}>
                   <Text textColor={'brand.white'}>max volume:</Text>
@@ -100,35 +98,11 @@ function App() {
                   <Text textColor={'brand.white'}>mean volume:</Text>
                   <Text textColor={'brand.400'}>{meanVolume}</Text>
                 </Stack>
+                <Terminal loading={isLoading} stdout={stdout} stream={stream} />
               </>
-              :
-              null
+              : null
           }
-          <Box>
 
-          </Box>
-          <Box bg='brand.terminal' w='100%' p={4} rounded="md" >
-            <Box display="flex">
-              {stream ? <Text as="kbd" textColor="brand.white">{stream}</Text> : null}
-              {stdout && !isLoading ? <Button width="100px" onClick={showTerminal}>{openTerminal ? "Hide" : "Show"}</Button> : null}
-            </Box>
-            <Collapse in={openTerminal} >
-              <Stack>
-                {
-                  stdout && !stream ? stdout.map(
-                    (element: string, index: number) => {
-                      return (
-                        <Text fontSize="13px" key={index} as="kbd" textColor="brand.white">{element}</Text>
-                      )
-                    }
-                  )
-                    : null
-                }
-              </Stack>
-            </Collapse>
-
-
-          </Box>
         </Stack>
       </Box>
     </Box >
@@ -141,6 +115,52 @@ const Banner = () => {
   return (
     <Box display="flex" bg="brand.bg" justifyContent="center">
       <Image src={banner} height="50px" mt="15px" />
+    </Box>
+  )
+}
+
+const LinearProgress = ({ loading }: { loading: boolean }) => {
+  if (loading) {
+    return <Progress height="5px" mt="5px" mb="5px" isIndeterminate color="brand.200" />
+  } else {
+    return <Divider height="5px" mt="5px" mb="5px" />
+  }
+}
+
+interface ITerminal {
+  loading: boolean
+  stdout: string[]
+  stream: string
+}
+
+const Terminal: React.FC<ITerminal> = ({ loading, stdout, stream }) => {
+
+  const [openTerminal, setOpenTerminal] = useState(false);
+
+  function showTerminal() {
+    setOpenTerminal(!openTerminal)
+  }
+
+  return (
+    <Box bg='brand.terminal' w='100%' p={4} rounded="md" >
+      <Box display="flex">
+        {stream ? <Text as="kbd" textColor="brand.white">{stream}</Text> : null}
+        {stdout && !loading ? <Button width="100px" onClick={showTerminal}>{openTerminal ? "Hide" : "Show"}</Button> : null}
+      </Box>
+      <Collapse in={openTerminal} >
+        <Stack>
+          {
+            stdout && !stream ? stdout.map(
+              (element: string, index: number) => {
+                return (
+                  <Text fontSize="13px" key={index} as="kbd" textColor="brand.white">{element}</Text>
+                )
+              }
+            )
+              : null
+          }
+        </Stack>
+      </Collapse>
     </Box>
   )
 }

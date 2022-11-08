@@ -2,13 +2,13 @@
 
 > ⚠️ Work In Progress
 
-![](https://i.imgur.com/gIhwTro.gif)
+![](https://i.imgur.com/NzPQe0o.gif)
 
 The gif above shows a video file where the peak volume is -7.9dB, and after normalization it's raised to -1.1dB peak volume.
 
 ## Quickstart (Windows)
 
-Install ffmpeg 
+Install ffmpeg
 
 ```powershell
 choco install ffmpg
@@ -33,6 +33,7 @@ Features:
 Goals:
   - Replace the audio track of a video with another audio file
   - Configurable path to ffmpeg binary
+  - Cancel a normalization
 
 ## Development
 
