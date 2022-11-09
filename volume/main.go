@@ -2,6 +2,7 @@ package volume
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"os/exec"
@@ -83,7 +84,7 @@ func (v *Volume) ffmpeg(args ...string) []string {
 	cmd.Start()
 
 	streamScanner := bufio.NewScanner(stderr)
-	streamScanner.Split(bufio.ScanWords)
+	streamScanner.Split(ScanLinesHack)
 
 	go func() {
 		for streamScanner.Scan() {
@@ -105,4 +106,29 @@ func (v *Volume) ffmpeg(args ...string) []string {
 	cmd.Wait()
 	runtime.EventsEmit(v.ctx, "ffmpeg", out)
 	return out
+}
+
+// dropCR copied from Go src bufio scan.go
+func dropCR(data []byte) []byte {
+	if len(data) > 0 && data[len(data)-1] == '\r' {
+		return data[0 : len(data)-1]
+	}
+	return data
+}
+
+// ScanLines copied and changed from Go src bufio scan.go to be Windows friendly
+func ScanLinesHack(data []byte, atEOF bool) (advance int, token []byte, err error) {
+	if atEOF && len(data) == 0 {
+		return 0, nil, nil
+	}
+	if i := bytes.IndexByte(data, '\r'); i >= 0 {
+		// We have a full newline-terminated line.
+		return i + 1, dropCR(data[0:i]), nil
+	}
+	// If we're at EOF, we have a final, non-terminated line. Return it.
+	if atEOF {
+		return len(data), dropCR(data), nil
+	}
+	// Request more data.
+	return 0, nil, nil
 }
