@@ -11,7 +11,7 @@ import TextPair from "./TextPair"
 
 const NormalizeTab = () => {
   const [state, dispatch] = React.useReducer(normalizeReducer, initialState)
-  console.log("hello")
+
   const getVideoFile = () => {
     Videofile().then((filepath) => {
       dispatch({ ...state, type: "load_file", file: filepath })
@@ -29,10 +29,12 @@ const NormalizeTab = () => {
         ...state,
         type: "analyze",
         maxVolume: v.Max,
-        meanVolume: v.Mean
+        meanVolume: v.Mean,
+        isLoading: true
       })
     }).finally(() => {
       EventsOff("ffmpeg")
+      dispatch({ ...state, type: "loading", isLoading: false })
     })
   }
 
