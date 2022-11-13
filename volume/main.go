@@ -15,9 +15,11 @@ import (
 
 type Volume struct {
 	ctx     context.Context
+	output  []string
 	Max     string
 	Mean    string
-	output  []string
+	OutMax  string
+	OutMean string
 	Outfile string
 }
 
@@ -30,8 +32,8 @@ func (v *Volume) Volumedetect(filename string) (Volume, error) {
 	out := v.ffmpeg("-i", filename, "-af", "volumedetect", "-vn", "-sn", "-dn", "-f", "null", "NUL")
 
 	v.output = out
-	v.getMean()
-	v.getMax()
+	v.Mean = v.getMean()
+	v.Max = v.getMax()
 
 	return *v, nil
 }
@@ -41,8 +43,12 @@ func (v *Volume) Lufs(filename string) (Volume, error) {
 	ext := filepath.Ext(filename)
 	outfile := fmt.Sprintf("%s_normalized%s", strings.TrimSuffix(filename, ext), ext)
 	v.ffmpeg("-n", "-i", filename, "-af", "loudnorm=I=-14:LRA=11:TP=-1", outfile)
-
 	v.Outfile = outfile
+
+	// Analyze the newly normalized filed
+	v.Volumedetect(outfile)
+	v.OutMax = v.getMax()
+	v.OutMean = v.getMean()
 
 	return *v, nil
 }
@@ -60,13 +66,11 @@ func getLine(find string, text []string, delimiter string) string {
 }
 
 func (v *Volume) getMax() string {
-	v.Max = getLine("max_volume", v.output, ":")
-	return v.Max
+	return getLine("max_volume", v.output, ":")
 }
 
 func (v *Volume) getMean() string {
-	v.Mean = getLine("mean_volume", v.output, ":")
-	return v.Mean
+	return getLine("mean_volume", v.output, ":")
 }
 
 func (v *Volume) ffmpeg(args ...string) []string {

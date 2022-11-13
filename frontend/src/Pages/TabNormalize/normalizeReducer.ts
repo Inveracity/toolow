@@ -1,6 +1,8 @@
 export interface State {
   maxVolume: string
   meanVolume: string
+  outmaxVolume: string
+  outmeanVolume: string
   file: string
   normalizedFile: string
   isLoading: boolean
@@ -13,6 +15,8 @@ export let initialState: State = {
   isLoading: false,
   maxVolume: "",
   meanVolume: "",
+  outmaxVolume: "",
+  outmeanVolume: "",
   normalizedFile: "",
   stdout: [""],
   stream: "",
@@ -35,7 +39,7 @@ function normalizeReducer(state: State, action: Action): State {
     case "load_file":
       return { ...state, file: action.file }
     case "normalize":
-      return { ...state, maxVolume: action.maxVolume, meanVolume: action.meanVolume }
+      return { ...state, outmaxVolume: action.outmaxVolume, outmeanVolume: action.outmeanVolume, normalizedFile: action.normalizedFile }
     case "analyze":
       return { ...state, maxVolume: action.maxVolume, meanVolume: action.meanVolume, isLoading: false }
     case "clear":

@@ -47,8 +47,8 @@ const NormalizeTab = () => {
         dispatch({
           ...state,
           type: "normalize",
-          maxVolume: result.Max,
-          meanVolume: result.Mean,
+          outmaxVolume: result.OutMax,
+          outmeanVolume: result.OutMean,
           normalizedFile: result.Outfile,
           isLoading: false,
         })
@@ -80,6 +80,8 @@ const NormalizeTab = () => {
               <TextPair left="Out:" right={state.normalizedFile} />
               <TextPair left="max volume:" right={state.maxVolume} />
               <TextPair left="mean volume:" right={state.meanVolume} />
+              <TextPair left="out max volume:" right={state.outmaxVolume} />
+              <TextPair left="out mean volume:" right={state.outmeanVolume} />
               <Terminal loading={state.isLoading} stdout={state.stdout} stream={state.stream} />
             </>
             : null
