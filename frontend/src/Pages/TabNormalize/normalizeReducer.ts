@@ -1,6 +1,3 @@
-import { Normalize, Videofile, Volume } from "../../../wailsjs/go/main/App"
-import { EventsOff, EventsOn } from "../../../wailsjs/runtime/runtime"
-
 export interface State {
   maxVolume: string
   meanVolume: string
@@ -25,6 +22,9 @@ export type ActionTypes = "normalize"
   | "analyze"
   | "load_file"
   | "clear"
+  | "stdout"
+  | "loading"
+  | "stream"
 
 export interface Action extends State {
   type: ActionTypes
@@ -33,59 +33,22 @@ export interface Action extends State {
 function normalizeReducer(state: State, action: Action): State {
   switch (action.type) {
     case "load_file":
-      return { ...action }
+      return { ...state, file: action.file }
     case "normalize":
-      return state
+      return { ...state, maxVolume: action.maxVolume, meanVolume: action.meanVolume }
     case "analyze":
-      return state
+      return { ...state, maxVolume: action.maxVolume, meanVolume: action.meanVolume, isLoading: false }
     case "clear":
-      return { ...initialState, file: action.file }
+      return { ...initialState }
+    case "stdout":
+      return { ...state, stdout: action.stdout, stream: "" }
+    case "stream":
+      return { ...state, stream: action.stream, stdout: [""], isLoading: action.isLoading }
+    case "loading":
+      return { ...state, isLoading: action.isLoading }
     default:
       return state
   }
 }
 
 export default normalizeReducer;
-
-function clear(): State {
-  return initialState
-}
-
-
-
-function getVolume(filepath: string) {
-  EventsOn("ffmpeg", ffmpeg)
-  Volume(filepath).then((v) => {
-    // setMaxVolume(v.Max)
-    // setMeanVolume(v.Mean)
-  }).finally(() => {
-    EventsOff("ffmpeg")
-  })
-}
-
-function ffmpeg(data: Array<string>) {
-  // setStdout(data)
-  // If there is a full set of data, drop the streamed data
-  // setStream("")
-}
-
-function handleStream(data: string) {
-  //setStream(data)
-}
-
-function normalize(filepath: string) {
-  // setIsLoading(true)
-  EventsOn("ffmpeg", ffmpeg)
-  EventsOn("stream", handleStream)
-  Normalize(filepath)
-    .then((result) => {
-      // setNormalized(result.Outfile)
-      // setMaxVolume(result.Max)
-      // setMeanVolume(result.Mean)
-    })
-    .finally(() => {
-      EventsOff("ffmpeg")
-      EventsOff("stream")
-      // setIsLoading(false)
-    })
-}

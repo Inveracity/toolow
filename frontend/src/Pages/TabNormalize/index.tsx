@@ -1,6 +1,7 @@
-import { Box, Button, Stack } from "@chakra-ui/react"
 import React from "react"
-import { Videofile } from "../../../wailsjs/go/main/App"
+import { Box, Button, Stack } from "@chakra-ui/react"
+import { Videofile, Volume, Normalize } from "../../../wailsjs/go/main/App"
+import { EventsOff, EventsOn } from "../../../wailsjs/runtime/runtime"
 import LinearProgress from "./LinearProgress"
 import normalizeReducer, { initialState } from "./normalizeReducer"
 import Terminal from "./Terminal"
@@ -8,13 +9,56 @@ import TextPair from "./TextPair"
 
 
 
-const Normalize = () => {
+const NormalizeTab = () => {
   const [state, dispatch] = React.useReducer(normalizeReducer, initialState)
-
+  console.log("hello")
   const getVideoFile = () => {
     Videofile().then((filepath) => {
       dispatch({ ...state, type: "load_file", file: filepath })
     })
+  }
+
+  const ffmpeg = (data: Array<string>) => {
+    dispatch({ ...state, type: "stdout", stdout: data })
+  }
+
+  const getVolume = (filepath: string) => {
+    EventsOn("ffmpeg", ffmpeg)
+    Volume(filepath).then((v) => {
+      dispatch({
+        ...state,
+        type: "analyze",
+        maxVolume: v.Max,
+        meanVolume: v.Mean
+      })
+    }).finally(() => {
+      EventsOff("ffmpeg")
+    })
+  }
+
+  const normalize = (filepath: string) => {
+    dispatch({ ...state, type: "loading", isLoading: true })
+    EventsOn("ffmpeg", ffmpeg)
+    EventsOn("stream", handleStream)
+    Normalize(filepath)
+      .then((result) => {
+        dispatch({
+          ...state,
+          type: "normalize",
+          maxVolume: result.Max,
+          meanVolume: result.Mean,
+          isLoading: false,
+        })
+      })
+      .finally(() => {
+        dispatch({ ...state, type: "loading", isLoading: false })
+        EventsOff("ffmpeg")
+        EventsOff("stream")
+      })
+  }
+
+  function handleStream(data: string) {
+    dispatch({ ...state, type: "stream", stream: data, isLoading: true })
   }
 
   return (
@@ -22,8 +66,8 @@ const Normalize = () => {
       <Stack width={"70vw"}>
         <Stack direction={"row"} justify="space-between">
           <Button disabled={state.isLoading} bgColor={"brand.300"} width="140px" onClick={getVideoFile}>Select video file</Button>
-          <Button disabled={state.isLoading || !state.file} width="140px" onClick={(_) => dispatch({ ...state, type: "analyze" })}>Analyze</Button>
-          <Button disabled={state.isLoading || !state.file} width="140px" onClick={(_) => dispatch({ ...state, type: "normalize" })}>Normalize Audio</Button>
+          <Button disabled={state.isLoading || !state.file} width="140px" onClick={() => getVolume(state.file)}>Analyze</Button>
+          <Button disabled={state.isLoading || !state.file} width="140px" onClick={() => normalize(state.file)}>Normalize Audio</Button>
           <Button disabled={state.isLoading} bgColor={"brand.300"} width="140px" onClick={() => dispatch({ ...state, type: "clear" })}>Clear</Button>
         </Stack>
         {
@@ -43,4 +87,4 @@ const Normalize = () => {
   )
 }
 
-export default Normalize
+export default NormalizeTab

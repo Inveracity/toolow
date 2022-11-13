@@ -1,5 +1,5 @@
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
-import Normalize from "./TabNormalize";
+import NormalizeTab from "./TabNormalize";
 
 const TabMenu = () => {
   return (
@@ -10,7 +10,7 @@ const TabMenu = () => {
       </TabList>
       <TabPanels>
         <TabPanel>
-          <Normalize />
+          <NormalizeTab />
         </TabPanel>
         <TabPanel>
           <p>Todo!</p>
