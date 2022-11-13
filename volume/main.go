@@ -40,12 +40,8 @@ func (v *Volume) Volumedetect(filename string) (Volume, error) {
 func (v *Volume) Lufs(filename string) (Volume, error) {
 	ext := filepath.Ext(filename)
 	outfile := fmt.Sprintf("%s_normalized%s", strings.TrimSuffix(filename, ext), ext)
-	v.ffmpeg("-i", filename, "-af", "loudnorm=I=-14:LRA=11:TP=-1", outfile)
+	v.ffmpeg("-n", "-i", filename, "-af", "loudnorm=I=-14:LRA=11:TP=-1", outfile)
 
-	// Analyze after normalization
-	v.Volumedetect(outfile)
-	v.getMean()
-	v.getMax()
 	v.Outfile = outfile
 
 	return *v, nil

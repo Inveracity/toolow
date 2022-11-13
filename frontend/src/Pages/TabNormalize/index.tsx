@@ -49,6 +49,7 @@ const NormalizeTab = () => {
           type: "normalize",
           maxVolume: result.Max,
           meanVolume: result.Mean,
+          normalizedFile: result.Outfile,
           isLoading: false,
         })
       })
